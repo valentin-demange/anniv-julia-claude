@@ -1,103 +1,180 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+
+interface Message {
+  id: string;
+  text: string;
+  isUser: boolean;
+  timestamp: Date;
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const sendMessage = async () => {
+    if (!inputText.trim()) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: inputText,
+      isUser: true,
+      timestamp: new Date(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputText('');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: inputText,
+          conversationHistory: messages,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: data.message,
+        isUser: false,
+        timestamp: new Date(),
+      };
+
+      setMessages(prev => [...prev, botMessage]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "Désolé ma queen, j&apos;ai un petit souci technique! 😅 Peux-tu réessayer?",
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-pink-200 via-purple-200 to-yellow-200">
+      {/* Birthday decorations */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-10 left-10 text-6xl animate-bounce">🎈</div>
+        <div className="absolute top-20 right-20 text-5xl animate-pulse">🎂</div>
+        <div className="absolute top-40 left-1/4 text-4xl animate-bounce delay-300">🎁</div>
+        <div className="absolute bottom-20 right-10 text-5xl animate-pulse delay-500">🎉</div>
+        <div className="absolute bottom-40 left-20 text-4xl animate-bounce delay-700">🎊</div>
+      </div>
+
+      <div className="relative z-10 flex flex-col h-screen">
+        {/* Header */}
+        <header className="bg-white/80 backdrop-blur-sm shadow-lg p-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-yellow-500 bg-clip-text text-transparent mb-2">
+              Joyeux Anniversaire Julia! 🎉
+            </h1>
+            <p className="text-lg md:text-xl text-gray-700 font-medium">
+              Tes amis ont une surprise pour toi... Parle avec moi pour découvrir! 🎭
+            </p>
+          </div>
+        </header>
+
+        {/* Chat Container */}
+        <div className="flex-1 max-w-4xl mx-auto w-full p-4 flex flex-col">
+          {/* Messages */}
+          <div className="flex-1 bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-4 overflow-y-auto">
+            {messages.length === 0 ? (
+              <div className="text-center text-gray-600 mt-20">
+                <div className="text-6xl mb-4">🤖</div>
+                <p className="text-xl mb-2">Salut ma queen! 👑</p>
+                <p className="text-lg">Commence la conversation pour découvrir ta surprise d&apos;anniversaire!</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[80%] p-4 rounded-2xl ${
+                        message.isUser
+                          ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white'
+                          : 'bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-800'
+                      }`}
+                    >
+                      <p className="text-lg">{message.text}</p>
+                      <p className="text-xs opacity-70 mt-2">
+                        {message.timestamp.toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-800 p-4 rounded-2xl">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce delay-100"></div>
+                        <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce delay-200"></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Input Area */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-4">
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Écris ton message ici..."
+                className="flex-1 p-4 border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none text-lg"
+                disabled={isLoading}
+              />
+              <button
+                onClick={sendMessage}
+                disabled={isLoading || !inputText.trim()}
+                className="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-lg font-medium"
+              >
+                Envoyer 🚀
+              </button>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
     </div>
   );
 }
