@@ -127,7 +127,7 @@ export default function Home() {
                           : 'bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-800'
                       }`}
                     >
-                      <p className="text-lg">{message.text}</p>
+                      <p className="text-lg whitespace-pre-wrap leading-relaxed">{message.text}</p>
                       <p className="text-xs opacity-70 mt-2">
                         {message.timestamp.toLocaleTimeString('fr-FR', {
                           hour: '2-digit',
@@ -161,7 +161,7 @@ export default function Home() {
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Écris ton message ici..."
-                className="flex-1 p-4 border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none text-lg"
+                className="flex-1 p-4 border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none text-lg text-gray-800 placeholder:text-gray-500"
                 disabled={isLoading}
               />
               <button
