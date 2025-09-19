@@ -158,7 +158,6 @@ The chatbot uses a custom French prompt that:
   - Verino in Marseille on Thursday, March 19th at 8:00 PM
   - Salima Passion in Marseille (date TBD)
 - Uses a fun, enthusiastic tone
-- Calls Julia "ma queen" 👑
 - Helps her make the perfect choice for her birthday gift
 
 ## 📋 Tech Stack

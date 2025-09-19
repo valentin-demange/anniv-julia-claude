@@ -110,7 +110,6 @@ export default function Home() {
             {messages.length === 0 ? (
               <div className="text-center text-gray-600 mt-20">
                 <div className="text-6xl mb-4">🤖</div>
-                <p className="text-xl mb-2">Salut ma queen! 👑</p>
                 <p className="text-lg">Commence la conversation pour découvrir ta surprise d&apos;anniversaire!</p>
               </div>
             ) : (
